@@ -140,6 +140,7 @@ async function main() {
     categoryId: "cat-starters",
     isFeatured: true,
     sortOrder: 1,
+    image: "/images/couscous.jpg",
   },
 });
   const calamari = await prisma.menuItem.upsert({
