@@ -123,19 +123,25 @@ async function main() {
 
   // Starters
   const Couscous = await prisma.menuItem.upsert({
-    where: { id: "item-Couscous" },
-    update: {},
-    create: {
-      id: "item-Couscous",
-      name: "Couscous",
-      description: "a moroccan trditional plate with seven vegetabelse an chekpeese and chiken",
-      basePrice: 4,
-      categoryId: "cat-starters",
-      isFeatured: true,
-      sortOrder: 1,
-    },
-  });
-
+  where: { id: "item-Couscous" },
+  update: {
+    name: "Couscous",
+    description: "a moroccan trditional plate with seven vegetablese an chekpeese and chiken",
+    basePrice: 4,
+    categoryId: "cat-starters",
+    isFeatured: true,
+    sortOrder: 1,
+  },
+  create: {
+    id: "item-Couscous",
+    name: "Couscous",
+    description: "a moroccan trditional plate with seven vegetablese an chekpeese and chiken",
+    basePrice: 4,
+    categoryId: "cat-starters",
+    isFeatured: true,
+    sortOrder: 1,
+  },
+});
   const calamari = await prisma.menuItem.upsert({
     where: { id: "item-calamari" },
     update: {},
