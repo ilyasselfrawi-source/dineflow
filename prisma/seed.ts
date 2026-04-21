@@ -471,7 +471,7 @@ async function main() {
       { id: "extra-prosciutto-add", name: "Add Prosciutto", price: 4.0, menuItemId: "item-margherita", sortOrder: 2 },
       { id: "extra-mushrooms-add", name: "Add Mushrooms", price: 2.5, menuItemId: "item-margherita", sortOrder: 3 },
     ],
-    skipDuplicates: true,
+    
   });
 
   // Steak extras
@@ -481,7 +481,7 @@ async function main() {
       { id: "extra-peppercorn", name: "Peppercorn Sauce", price: 3.0, menuItemId: "item-ribeye", sortOrder: 2 },
       { id: "extra-bearnaise", name: "Béarnaise Sauce", price: 3.0, menuItemId: "item-ribeye", sortOrder: 3 },
     ],
-    skipDuplicates: true,
+    
   });
 
   // Pasta extras
@@ -490,7 +490,7 @@ async function main() {
       { id: "extra-extra-bacon", name: "Extra Guanciale", price: 3.0, menuItemId: "item-pasta-carbonara", sortOrder: 1 },
       { id: "extra-add-truffle", name: "Truffle Oil Drizzle", price: 4.5, menuItemId: "item-pasta-carbonara", sortOrder: 2 },
     ],
-    skipDuplicates: true,
+    
   });
 
   console.log("✅ Extras created");
@@ -583,7 +583,7 @@ async function main() {
       { orderId: sampleOrder1.id, status: "PREPARING", changedBy: admin.id },
       { orderId: sampleOrder2.id, status: "NEW", changedBy: "customer" },
     ],
-    skipDuplicates: true,
+   
   });
 
   console.log("✅ Sample orders created");
