@@ -1,0 +1,168 @@
+// DineFlow - Prisma Schema
+// SQLite for local dev, PostgreSQL for production (change provider + url in .env)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  passwordHash  String
+  role          String   @default("STAFF") // ADMIN | STAFF
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model RestaurantSettings {
+  id              String   @id @default(cuid())
+  restaurantName  String   @default("DineFlow Restaurant")
+  logoUrl         String?
+  currency        String   @default("USD")
+  currencySymbol  String   @default("$")
+  isOpen          Boolean  @default(true)
+  closedMessage   String   @default("We are currently closed. Please come back later!")
+  welcomeMessage  String   @default("Scan, order, enjoy!")
+  taxRate         Float    @default(0)     // percentage e.g. 8.5
+  serviceCharge   Float    @default(0)     // percentage
+  wifiSsid        String?
+  wifiPassword    String?
+  showWifi        Boolean  @default(false)
+  primaryColor    String   @default("#e85d04")
+  updatedAt       DateTime @updatedAt
+}
+
+model Table {
+  id         String   @id @default(cuid())
+  number     String   // display label e.g. "T1", "Table 3", "Bar 1"
+  slug       String   @unique // stable public identifier for QR URL
+  isActive   Boolean  @default(true)
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  orders     Order[]
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  sortOrder   Int        @default(0)
+  isVisible   Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  menuItems   MenuItem[]
+}
+
+model MenuItem {
+  id              String            @id @default(cuid())
+  name            String
+  description     String?
+  basePrice       Float
+  imageUrl        String?
+  isAvailable     Boolean           @default(true)
+  isVisible       Boolean           @default(true)
+  isFeatured      Boolean           @default(false)
+  sortOrder       Int               @default(0)
+  prepNote        String?           // internal kitchen note
+  categoryId      String
+  category        Category          @relation(fields: [categoryId], references: [id])
+  optionGroups    OptionGroup[]
+  extras          MenuItemExtra[]
+  orderItems      OrderItem[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model OptionGroup {
+  id          String        @id @default(cuid())
+  name        String        // e.g. "Size", "Cooking preference"
+  required    Boolean       @default(false)
+  minSelect   Int           @default(0)
+  maxSelect   Int           @default(1)
+  sortOrder   Int           @default(0)
+  menuItemId  String
+  menuItem    MenuItem      @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  options     Option[]
+}
+
+model Option {
+  id            String      @id @default(cuid())
+  name          String      // e.g. "Small", "Medium", "Large"
+  priceModifier Float       @default(0) // added to base price
+  sortOrder     Int         @default(0)
+  groupId       String
+  group         OptionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+}
+
+model MenuItemExtra {
+  id         String    @id @default(cuid())
+  name       String    // e.g. "Extra cheese", "Extra sauce"
+  price      Float     @default(0)
+  isAvailable Boolean  @default(true)
+  sortOrder  Int       @default(0)
+  menuItemId String
+  menuItem   MenuItem  @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  orderNumber     String        @unique // human-readable e.g. "DF-0042"
+  tableId         String
+  table           Table         @relation(fields: [tableId], references: [id])
+  customerName    String?
+  status          String        @default("NEW") // NEW | CONFIRMED | PREPARING | READY | SERVED | COMPLETED | CANCELLED
+  subtotal        Float
+  taxAmount       Float         @default(0)
+  serviceAmount   Float         @default(0)
+  total           Float
+  notes           String?
+  submissionToken String?       @unique // idempotency token
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  items           OrderItem[]
+  statusHistory   OrderStatusHistory[]
+}
+
+model OrderItem {
+  id              String           @id @default(cuid())
+  orderId         String
+  order           Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItemId      String
+  menuItem        MenuItem         @relation(fields: [menuItemId], references: [id])
+  // Snapshot fields - frozen at order time so menu changes don't affect history
+  itemNameSnapshot  String
+  basePriceSnapshot Float
+  quantity          Int
+  notes             String?
+  selectedOptions   String?        // JSON snapshot: [{groupName, optionName, priceModifier}]
+  selectedExtras    String?        // JSON snapshot: [{name, price}]
+  lineTotal         Float
+  createdAt         DateTime       @default(now())
+  extras            OrderItemExtra[]
+}
+
+model OrderItemExtra {
+  id          String    @id @default(cuid())
+  orderItemId String
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  extraName   String
+  extraPrice  Float
+  quantity    Int       @default(1)
+}
+
+model OrderStatusHistory {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    String
+  changedBy String?  // user id or "customer"
+  note      String?
+  createdAt DateTime @default(now())
+}
