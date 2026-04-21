@@ -141,9 +141,9 @@ async function main() {
     update: {},
     create: {
       id: "item-calamari",
-      name: "Crispy Calamari",
-      description: "Lightly battered and fried squid rings with marinara sauce and lemon wedge",
-      basePrice: 14.0,
+      name: "Couscous",
+      description: "Moroccan Couscous with seven vegetebalses and chekpees",
+      basePrice: 3.0,
       categoryId: "cat-starters",
       sortOrder: 2,
     },
