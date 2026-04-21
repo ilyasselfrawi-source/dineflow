@@ -131,6 +131,7 @@ async function main() {
     categoryId: "cat-starters",
     isFeatured: true,
     sortOrder: 1,
+    imageUrl: "/images/couscous.jpg",
   },
   create: {
     id: "item-Couscous",
@@ -140,7 +141,7 @@ async function main() {
     categoryId: "cat-starters",
     isFeatured: true,
     sortOrder: 1,
-    image: "/images/couscous.jpg",
+    imageUrl: "/images/couscous.jpg",
   },
 });
   const calamari = await prisma.menuItem.upsert({
