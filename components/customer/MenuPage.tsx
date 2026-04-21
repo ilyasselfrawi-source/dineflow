@@ -311,7 +311,9 @@ export default function MenuPage({ table, categories, settings }: Props) {
           <section
             key={category.id}
             id={`cat-${category.id}`}
-            ref={(el) => { categoryRefs.current[category.id] = el; }}
+           ref={(el: HTMLDivElement | null) => {
+  categoryRefs.current[category.id] = el;
+}}
             className="mb-8"
           >
             <div className="mb-4">
