@@ -57,17 +57,17 @@ async function main() {
 
   // ── Tables ───────────────────────────────────────────────────────────
   const tableData = [
-  { number: "T1", slug: "table-1" },
-  { number: "T2", slug: "table-2" },
-  { number: "T3", slug: "table-3" },
-  { number: "T4", slug: "table-4" },
-  { number: "T5", slug: "table-5" },
-  { number: "T6", slug: "table-6" },
-  { number: "T7", slug: "table-7" },
-  { number: "T8", slug: "table-8" },
-  { number: "T9", slug: "table-9" },
-  { number: "T10", slug: "table-10", isActive: false },
-];
+    { number: "T1", slug: "table-t1" },
+    { number: "T2", slug: "table-t2-" },
+    { number: "T3", slug: "table-t3-" },
+    { number: "T4", slug: "table-t4-" },
+    { number: "T5", slug: "table-t5-" },
+    { number: "T6", slug: "table-t6-" },
+    { number: "Bar 1", slug: "bar-1-" },
+    { number: "Bar 2", slug: "bar-2-" },
+    { number: "Patio 1", slug: "patio-1-" },
+    { number: "Patio 2", slug: "patio-2-" + nanoid(8), isActive: false },
+  ];
 
   const tables: any[] = [];
   for (const t of tableData) {
@@ -122,14 +122,14 @@ async function main() {
   // ── Menu Items ───────────────────────────────────────────────────────
 
   // Starters
-  const bruschetta = await prisma.menuItem.upsert({
-    where: { id: "item-bruschetta" },
+  const Couscous = await prisma.menuItem.upsert({
+    where: { id: "item-Couscous" },
     update: {},
     create: {
-      id: "item-bruschetta",
-      name: "Classic Bruschetta",
-      description: "Toasted sourdough with heirloom tomatoes, fresh basil, garlic, and extra virgin olive oil",
-      basePrice: 9.5,
+      id: "item-Couscous",
+      name: "Couscous",
+      description: "a moroccan trditional plate with seven vegetabelse an chekpeese and chiken",
+      basePrice: 4,
       categoryId: "cat-starters",
       isFeatured: true,
       sortOrder: 1,
@@ -141,9 +141,9 @@ async function main() {
     update: {},
     create: {
       id: "item-calamari",
-      name: "Couscous",
-      description: "Moroccan Couscous with seven vegetebalses and chekpees",
-      basePrice: 3.0,
+      name: "Crispy Calamari",
+      description: "Lightly battered and fried squid rings with marinara sauce and lemon wedge",
+      basePrice: 14.0,
       categoryId: "cat-starters",
       sortOrder: 2,
     },
