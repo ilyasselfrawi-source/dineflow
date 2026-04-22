@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     const order = await submitOrder(parsed.data);
 
     sseEmitter.emit({
-      type: "ORDER_CREATED",
+      type: "NEW_ORDER",
       payload: {
         orderId: order.id,
         orderNumber: order.orderNumber,
