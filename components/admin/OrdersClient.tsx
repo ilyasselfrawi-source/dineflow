@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { formatCurrency, formatTime, ORDER_STATUS_CONFIG } from "@/lib/utils/formatters";
 
@@ -43,7 +43,6 @@ export default function OrdersClient({
   const [statusFilter, setStatusFilter] = useState(initialFilters.status);
   const [tableFilter, setTableFilter] = useState(initialFilters.tableId);
   const [hasNewOrder, setHasNewOrder] = useState(false);
-  const sseRef = useRef<EventSource | null>(null);
   const sym = settings.currencySymbol;
 
   const fetchOrders = useCallback(async () => {
@@ -60,70 +59,55 @@ export default function OrdersClient({
 
       if (!res.ok) return;
 
-      const data = await res.json();
+      const data: Order[] = await res.json();
+
+      // تنبيه إلا تزاد شي order جديد
+      if (data.length > orders.length) {
+        setHasNewOrder(true);
+
+        try {
+          const AudioCtx =
+            window.AudioContext ||
+            (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+
+          if (AudioCtx) {
+            const ctx = new AudioCtx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.frequency.setValueAtTime(880, ctx.currentTime);
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.3);
+          }
+        } catch {}
+
+        setTimeout(() => setHasNewOrder(false), 3000);
+      }
+
       setOrders(data);
     } catch (error) {
       console.error("Failed to fetch orders:", error);
     }
-  }, [statusFilter, tableFilter]);
+  }, [statusFilter, tableFilter, orders.length]);
 
-  // Refetch when filters change
+  // أول تحميل + ملي يتبدلو الفلاتر
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
 
-  // SSE connection for live updates
+  // Auto refresh كل 3 ثواني
   useEffect(() => {
-    const es = new EventSource("/api/sse");
-    sseRef.current = es;
+    const interval = setInterval(() => {
+      fetchOrders();
+    }, 3000);
 
-    es.onmessage = (e) => {
-      try {
-        const event = JSON.parse(e.data);
-
-        if (event.type === "NEW_ORDER" || event.type === "ORDER_UPDATED") {
-          fetchOrders();
-
-          if (event.type === "NEW_ORDER") {
-            setHasNewOrder(true);
-
-            try {
-              const AudioCtx =
-                window.AudioContext ||
-                (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-
-              if (AudioCtx) {
-                const ctx = new AudioCtx();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-
-                osc.frequency.setValueAtTime(880, ctx.currentTime);
-                gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.3);
-              }
-            } catch {}
-
-            setTimeout(() => setHasNewOrder(false), 3000);
-          }
-        }
-      } catch (error) {
-        console.error("SSE parse error:", error);
-      }
-    };
-
-    es.onerror = () => {
-      console.error("SSE connection error");
-    };
-
-    return () => {
-      es.close();
-    };
+    return () => clearInterval(interval);
   }, [fetchOrders]);
 
   return (
