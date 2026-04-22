@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SubmitOrderSchema } from "@/lib/validators/order";
 import { submitOrder } from "@/lib/services/orderService";
+import { sseEmitter } from "@/lib/sse/sseEmitter";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Validate input shape
     const parsed = SubmitOrderSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
@@ -19,6 +19,14 @@ export async function POST(request: NextRequest) {
     }
 
     const order = await submitOrder(parsed.data);
+
+    sseEmitter.emit({
+      type: "ORDER_CREATED",
+      payload: {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+      },
+    });
 
     return NextResponse.json(
       {
