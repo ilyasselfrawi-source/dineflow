@@ -43,7 +43,16 @@ export default function OrdersClient({
   const [statusFilter, setStatusFilter] = useState(initialFilters.status);
   const [tableFilter, setTableFilter] = useState(initialFilters.tableId);
   const [hasNewOrder, setHasNewOrder] = useState(false);
+  const [newOrderPopup, setNewOrderPopup] = useState(false);
   const sym = settings.currencySymbol;
+
+  const playNotificationSound = () => {
+    try {
+      const audio = new Audio("/notification.wav");
+      audio.volume = 1;
+      audio.play().catch(() => {});
+    } catch {}
+  };
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -61,31 +70,10 @@ export default function OrdersClient({
 
       const data: Order[] = await res.json();
 
-      // تنبيه إلا تزاد شي order جديد
       if (data.length > orders.length) {
         setHasNewOrder(true);
-
-        try {
-          const AudioCtx =
-            window.AudioContext ||
-            (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-
-          if (AudioCtx) {
-            const ctx = new AudioCtx();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-
-            osc.frequency.setValueAtTime(880, ctx.currentTime);
-            gain.gain.setValueAtTime(0.1, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-
-            osc.start(ctx.currentTime);
-            osc.stop(ctx.currentTime + 0.3);
-          }
-        } catch {}
+        setNewOrderPopup(true);
+        playNotificationSound();
 
         setTimeout(() => setHasNewOrder(false), 3000);
       }
@@ -96,12 +84,10 @@ export default function OrdersClient({
     }
   }, [statusFilter, tableFilter, orders.length]);
 
-  // أول تحميل + ملي يتبدلو الفلاتر
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
 
-  // Auto refresh كل 3 ثواني
   useEffect(() => {
     const interval = setInterval(() => {
       fetchOrders();
@@ -112,6 +98,26 @@ export default function OrdersClient({
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
+      {newOrderPopup && (
+        <div className="fixed top-6 right-6 z-50 bg-white shadow-2xl border border-orange-200 rounded-2xl p-5 w-80">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse" />
+            <h3 className="font-bold text-stone-900">New Order Received</h3>
+          </div>
+
+          <p className="text-sm text-stone-600 mb-4">
+            A new order has been placed. Check the orders list now.
+          </p>
+
+          <button
+            onClick={() => setNewOrderPopup(false)}
+            className="w-full bg-orange-500 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-orange-600 transition"
+          >
+            OK
+          </button>
+        </div>
+      )}
+
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-display text-2xl font-bold text-stone-900">Orders</h1>
@@ -162,19 +168,6 @@ export default function OrdersClient({
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         {orders.length === 0 ? (
           <div className="text-center py-16 text-stone-400">
-            <svg
-              className="w-12 h-12 mx-auto mb-3 opacity-30"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"
-              />
-            </svg>
             <p className="font-medium text-sm">No orders found</p>
           </div>
         ) : (
@@ -182,24 +175,12 @@ export default function OrdersClient({
             <table className="w-full">
               <thead>
                 <tr className="border-b border-stone-100">
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">
-                    Order
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">
-                    Table
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">
-                    Items
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">
-                    Total
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">
-                    Time
-                  </th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">Order</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">Table</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">Status</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">Items</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">Total</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-stone-500 uppercase tracking-wider">Time</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
@@ -224,9 +205,7 @@ export default function OrdersClient({
                       </td>
 
                       <td className="px-4 py-3.5">
-                        <span
-                          className={`inline-flex text-xs px-2.5 py-1 rounded-full font-medium ${cfg.color} ${cfg.bg}`}
-                        >
+                        <span className={`inline-flex text-xs px-2.5 py-1 rounded-full font-medium ${cfg.color} ${cfg.bg}`}>
                           {cfg.label}
                         </span>
                       </td>
